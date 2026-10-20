@@ -147,6 +147,26 @@ MOVE { return MOVE; }
   }
 }
 
+-+[A-Z0-9]([A-Z0-9-]*[A-Z0-9])?-*|[A-Z0-9]([A-Z0-9-]*[A-Z0-9])?-+ {
+  int inicia_com_hifen = yytext[0] == '-';
+  int termina_com_hifen = yytext[yyleng - 1] == '-';
+  const char *problema = "terminando com hifen";
+
+  if (inicia_com_hifen && termina_com_hifen) {
+    problema = "iniciando e terminando com hifen";
+  } else if (inicia_com_hifen) {
+    problema = "iniciando com hifen";
+  }
+
+  fprintf(stderr, "Erro lexico linha %d, coluna %d: identificador %s: '%s'\n", linha_do_token, coluna_do_token, problema, yytext);
+  quantidade_de_erros++;
+
+  if (yyleng > 30) {
+    fprintf(stderr, "Erro lexico linha %d, coluna %d: identificador com mais de 30 caracteres: '%s'\n", linha_do_token, coluna_do_token, yytext);
+    quantidade_de_erros++;
+  }
+}
+
 "." { return PONTO; }
 "," { return VIRGULA; }
 ";" { return PONTO_VIRGULA; }
