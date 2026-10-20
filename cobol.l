@@ -337,44 +337,74 @@ void processar_continuacao(const char linha[], int ultima_coluna, int numero_lin
   }
 }
 
+int ultima_coluna_de_codigo(const char linha[]) {
+  int tamanho = strlen(linha);
+
+  if (tamanho > COLUNA_FIM_AREA_B) {
+    return COLUNA_FIM_AREA_B;
+  }
+
+  return tamanho;
+}
+
+char indicador_da_linha(const char linha[]) {
+  if (strlen(linha) < COLUNA_INDICADOR) {
+    return ' ';
+  }
+
+  return linha[COLUNA_INDICADOR - 1];
+}
+
+void processar_indicador_invalido(const char linha[], char indicador, int numero_linha) {
+  mostrar_linha(numero_linha, linha, "INDICADOR INVALIDO");
+  fprintf(stderr, "Erro lexico linha %d: indicador invalido '%c' na coluna 7\n", numero_linha, indicador);
+  quantidade_de_erros++;
+}
+
+void classificar_linha(const char linha[], int numero_linha) {
+  int ultima_coluna = ultima_coluna_de_codigo(linha);
+  char indicador = indicador_da_linha(linha);
+
+  switch (indicador) {
+    case ' ':
+      processar_linha(linha, ultima_coluna, numero_linha);
+      break;
+    case '-':
+      processar_continuacao(linha, ultima_coluna, numero_linha);
+      break;
+    case '*':
+    case '/':
+      mostrar_linha(numero_linha, linha, "comentario");
+      break;
+    case 'D':
+    case 'd':
+      mostrar_linha(numero_linha, linha, "depuracao");
+      break;
+    default:
+      processar_indicador_invalido(linha, indicador, numero_linha);
+      break;
+  }
+}
+
+void verificar_literal_no_fim(void) {
+  if (dentro_literal) {
+    fprintf(stderr, "Erro lexico: literal nao fechado no fim do arquivo\n");
+    quantidade_de_erros++;
+  }
+}
+
 void preprocessar(FILE *arquivo) {
-    char linha[COLUNA_FIM_LINHA + 1];
+  char linha[COLUNA_FIM_LINHA + 1];
   int numero_linha = 0;
 
   mostrar_cabecalho_colunas();
 
   while (ler_linha(arquivo, linha)) {
     numero_linha++;
-
-    int ultima_coluna = strlen(linha);
-    if (ultima_coluna > COLUNA_FIM_AREA_B) {
-      ultima_coluna = COLUNA_FIM_AREA_B;
-    }
-
-    char indicador = ' ';
-    if (strlen(linha) >= COLUNA_INDICADOR) {
-      indicador = linha[COLUNA_INDICADOR - 1];
-    }
-
-    if (indicador == ' ') {
-      processar_linha(linha, ultima_coluna, numero_linha);
-    } else if (indicador == '-') {
-      processar_continuacao(linha, ultima_coluna, numero_linha);
-    } else if (indicador == '*' || indicador == '/') {
-      mostrar_linha(numero_linha, linha, "comentario");
-    } else if (indicador == 'D' || indicador == 'd') {
-      mostrar_linha(numero_linha, linha, "depuracao");
-    } else {
-      mostrar_linha(numero_linha, linha, "INDICADOR INVALIDO");
-      fprintf(stderr, "Erro lexico linha %d: indicador invalido '%c' na coluna 7\n", numero_linha, indicador);
-      quantidade_de_erros++;
-    }
+    classificar_linha(linha, numero_linha);
   }
 
-  if (dentro_literal) {
-    fprintf(stderr, "Erro lexico: literal nao fechado no fim do arquivo\n");
-    quantidade_de_erros++;
-  }
+  verificar_literal_no_fim();
 }
 
 int main(int argc, char *argv[]) {
