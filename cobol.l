@@ -337,13 +337,7 @@ int area_vazia(const char linha[], int ultima_coluna) {
   return 1;
 }
 
-void processar_linha(const char linha[], int ultima_coluna, int numero_linha) {
-  if (area_vazia(linha, ultima_coluna)) {
-    mostrar_linha(numero_linha, linha, "vazia");
-  } else {
-    mostrar_linha(numero_linha, linha, "codigo");
-  }
-
+void adicionar_linha_de_codigo(const char linha[], int ultima_coluna, int numero_linha) {
   dentro_literal = 0;
 
   adicionar_caractere('\n', numero_linha, 0);
@@ -352,6 +346,16 @@ void processar_linha(const char linha[], int ultima_coluna, int numero_linha) {
   if (dentro_literal) {
     completar_ate_area_b(ultima_coluna, numero_linha);
   }
+}
+
+void processar_linha(const char linha[], int ultima_coluna, int numero_linha) {
+  if (area_vazia(linha, ultima_coluna)) {
+    mostrar_linha(numero_linha, linha, "vazia");
+  } else {
+    mostrar_linha(numero_linha, linha, "codigo");
+  }
+
+  adicionar_linha_de_codigo(linha, ultima_coluna, numero_linha);
 }
 
 void processar_continuacao(const char linha[], int ultima_coluna, int numero_linha) {
@@ -405,10 +409,12 @@ char indicador_da_linha(const char linha[]) {
   return linha[COLUNA_INDICADOR - 1];
 }
 
-void processar_indicador_invalido(const char linha[], char indicador, int numero_linha) {
+void processar_indicador_invalido(const char linha[], char indicador, int ultima_coluna, int numero_linha) {
   mostrar_linha(numero_linha, linha, "INDICADOR INVALIDO");
   fprintf(stderr, "Erro lexico linha %d: indicador invalido '%c' na coluna 7\n", numero_linha, indicador);
   quantidade_de_erros++;
+
+  adicionar_linha_de_codigo(linha, ultima_coluna, numero_linha);
 }
 
 void classificar_linha(const char linha[], int numero_linha) {
@@ -431,7 +437,7 @@ void classificar_linha(const char linha[], int numero_linha) {
       mostrar_linha(numero_linha, linha, "depuracao");
       break;
     default:
-      processar_indicador_invalido(linha, indicador, numero_linha);
+      processar_indicador_invalido(linha, indicador, ultima_coluna, numero_linha);
       break;
   }
 }
