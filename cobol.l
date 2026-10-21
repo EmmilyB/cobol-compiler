@@ -138,6 +138,16 @@ MOVE { return MOVE; }
 \"[^\"\n]*\" { return STRING; }
 \'[^\'\n]*\' { return STRING; }
 
+\"[^\"\n]* {
+  fprintf(stderr, "Erro lexico linha %d, coluna %d: literal iniciado com aspas duplas e nao encerrado: '%s'\n", linha_do_token, coluna_do_token, yytext);
+  quantidade_de_erros++;
+}
+
+\'[^\'\n]* {
+  fprintf(stderr, "Erro lexico linha %d, coluna %d: literal iniciado com aspa simples e nao encerrado: '%s'\n", linha_do_token, coluna_do_token, yytext);
+  quantidade_de_erros++;
+}
+
 [A-Z0-9]([A-Z0-9-]*[A-Z0-9])? {
   if (yyleng > 30) {
     fprintf(stderr, "Erro lexico linha %d, coluna %d: identificador com mais de 30 caracteres: '%s'\n", linha_do_token, coluna_do_token, yytext);
@@ -334,11 +344,7 @@ void processar_linha(const char linha[], int ultima_coluna, int numero_linha) {
     mostrar_linha(numero_linha, linha, "codigo");
   }
 
-  if (dentro_literal) {
-    fprintf(stderr, "Erro lexico linha %d: literal nao fechado na linha anterior\n", numero_linha);
-    quantidade_de_erros++;
-    dentro_literal = 0;
-  }
+  dentro_literal = 0;
 
   adicionar_caractere('\n', numero_linha, 0);
   adicionar_trecho_codigo(linha, COLUNA_INICIO_AREA_A, ultima_coluna, numero_linha);
@@ -431,10 +437,7 @@ void classificar_linha(const char linha[], int numero_linha) {
 }
 
 void verificar_literal_no_fim(void) {
-  if (dentro_literal) {
-    fprintf(stderr, "Erro lexico: literal nao fechado no fim do arquivo\n");
-    quantidade_de_erros++;
-  }
+  dentro_literal = 0;
 }
 
 void preprocessar(FILE *arquivo) {
