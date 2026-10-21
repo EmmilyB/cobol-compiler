@@ -365,7 +365,7 @@ void processar_continuacao(const char linha[], int ultima_coluna, int numero_lin
     fprintf(stderr, "Erro lexico linha %d: continuacao sem linha anterior\n", numero_linha);
     quantidade_de_erros++;
     return;
-  }
+  } 
 
   int coluna = COLUNA_INICIO_AREA_A;
 
@@ -376,11 +376,15 @@ void processar_continuacao(const char linha[], int ultima_coluna, int numero_lin
   if (dentro_literal) {
     if (coluna <= ultima_coluna && linha[coluna - 1] == aspa_literal) {
       coluna++;
-    } else {
+    } 
+    else {
       fprintf(stderr, "Erro lexico linha %d: continuacao de literal sem aspas\n", numero_linha);
       quantidade_de_erros++;
+      adicionar_caractere('\n', numero_linha, 0);
+      dentro_literal = 0;
     }
-  } else {
+  } 
+  else {
     adicionar_caractere(' ', numero_linha, coluna);
   }
 
